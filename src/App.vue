@@ -2,11 +2,12 @@
   <div id="app">
     <div class="container">
             <h1 class="jumbotron text-center">Car Finder</h1>
+    <div v-if="areRecallsReturned !== 'true'" v-bind:class="{ waiting: (loadingModels === 'true') }">
     <div class="row">
     <div class="col-sm-2 offset-sm-5">
 
         <!--load a dropdown with car makes-->
-        <div v-bind:class="{ waiting: (loadingModels === 'true') }">
+        <div>
             <label>Choose a make:</label>
             <br>
             <select v-model="selectedMake" v-on:change="getYearOptions()" style="min-width: 125px;">
@@ -29,7 +30,7 @@
         <div>
             <label>Choose a model:</label>
             <div v-if="loadingModels === 'true'">Loading the models...please wait</div>
-            <select v-model="selectedModel" style="min-width: 125px;">
+            <select v-model="selectedModel" v-on:change="setCarForRequest()" style="min-width: 125px;">
                 <option v-for="modelOption in modelOptions" v-bind:key="modelOption.model" v-bind:value="modelOption.model">
                     {{ modelOption.model }}
                 </option>
@@ -39,13 +40,17 @@
         <!--<div>{{ selectedYear }} {{ selectedMake }} {{ selectedModel }}</div>-->
 
         <div>
-          <button v-on:click="getRecalls()">Get Recalls</button>
+          <button v-on:click="getRecalls()" v-bind:disabled="isModelSelected !== 'true'">Get Recalls</button>
         </div>
     </div>
     </div>
+  </div>
     <div class="row">
       <div class="col-sm-8 offset-sm-2">
-        <div v-if="isModelSelected === 'true'">
+        <div v-if="areRecallsReturned === 'true'">
+          <div>
+          <button v-on:click="showSearch()">Search Again</button>
+        </div>
           <h2>Recalls for {{ selectedYear }} {{ selectedMake }} {{ selectedModel }}</h2>
             <img v-bind:src="imageUrl" v-bind:alt="selectedModel" width="600" height="400" />
             <div id="recall-list">
@@ -80,6 +85,7 @@ export default {
         selectedModel: '',
         imageUrl: '',
         isModelSelected: 'false',
+        areRecallsReturned: 'false',
         makeOptions: [],
         yearOptions: [],
         modelOptions: [],
@@ -113,7 +119,30 @@ export default {
             axios.get("https://localhost:44390/api/carrecall/" + this.selectedMake + "/" + this.selectedYear + "/" + this.selectedModel).then(response => {
             this.imageUrl = response.data.imageUrl;
             this.recalls = response.data.recallList;
+            this.areRecallsReturned = 'true';
+          });
+        },
+        setCarForRequest(){
+            //model has been chosen, ready to search
             this.isModelSelected = 'true';
+        },
+        showSearch(){
+          //reset to show search form again
+          this.selectedMake = '',
+          this.selectedYear = '',
+          this.selectedModel = '',
+          this.imageUrl =  '',
+          this.areRecallsReturned =  'false',
+          this.makeOptions =  [],
+          this.yearOptions =  [],
+          this.modelOptions =  [],
+          this.recalls =  [],
+          this.loadingModels =  ''
+          this.isModelSelected = 'false';
+
+          //load makes into dropdown
+          axios.get("https://localhost:44390/api/carrecall/makes").then(response => {
+            this.makeOptions = response.data
           });
         }
       },
