@@ -1,7 +1,17 @@
 <template>
   <div id="app">
+    <!--<div style="border: 10px solid red; border-radius: 5px; min-height: 100px;">-->
+      <!--<div class="jumbotron">-->
+      <div class="container">
+        <div class="top-header">
+          <h1 class="text-center">Car Finder</h1>
+          <p class="text-center" style="font-size: 1.5rem;">Get the latest recalls for your car</p>
+        </div>
+      </div>
+    <!--</div>-->
+    <!--</div>-->
     <div class="container">
-            <h1 class="jumbotron text-center">Car Finder</h1>
+      
     <div v-if="areRecallsReturned !== 'true'" v-bind:class="{ waiting: (loadingModels === 'true') }">
     <div class="row">
     <div class="col-sm-2 offset-sm-5">
@@ -15,6 +25,7 @@
                     {{makeOption.make.charAt(0).toUpperCase() + makeOption.make.substr(1)}}
                 </option>
             </select>
+            <div v-if="getMakesError === 'true'" style="color: red;">Error getting makes</div>
             <br>
         </div>
 
@@ -24,7 +35,9 @@
                 <option v-for="yearOption in yearOptions" v-bind:key="yearOption.year" v-bind:value="yearOption.year">
                     {{ yearOption.year }}
                 </option>
-            </select><br>
+            </select>
+            <div v-if="getYearsError === 'true'" style="color: red;">Error getting years</div>
+            <br>
         </div>
 
         <div>
@@ -35,14 +48,15 @@
                 <option v-for="modelOption in modelOptions" v-bind:key="modelOption.model" v-bind:value="modelOption.model">
                     {{ modelOption.model }}
                 </option>
-            </select><br>
+            </select>
+            <div v-if="getModelsError === 'true'" style="color: red;">Error getting models</div>
+            <br>
         </div>
-
-        <!--<div>{{ selectedYear }} {{ selectedMake }} {{ selectedModel }}</div>-->
 
         <div>
           <button v-on:click="getRecalls()" v-bind:disabled="isModelSelected !== 'true'">Get Recalls</button>
         </div>
+        <div v-if="getRecallsError === 'true'" style="color: red;">Error getting recalls</div>
     </div>
     </div>
   </div>
@@ -56,8 +70,10 @@
           </div>
           <!--show the recalls if results were found-->
           <div v-if="noRecallResults !== 'true'">
-            <h2>Recalls for {{ selectedYear }} {{ selectedMake }} {{ selectedModel }}</h2>
+            <div class="text-center">
+              <h2>Recalls for {{ selectedYear }} {{ selectedMake }} {{ selectedModel }}</h2>
               <img v-bind:src="imageUrl" v-bind:alt="selectedModel" width="600" height="400" />
+            </div>
                 <div id="recall-list">
                     <div v-for="recall in recalls" v-bind:key="recall.reportReceivedDate">
                       <h3>Component: {{ recall.component }}</h3>
@@ -71,10 +87,10 @@
                 </div>
               </div>
             </div>
+            </div>
           </div>
         </div>
       </div>
-</div>
 </template>
 
 <script>
@@ -100,34 +116,49 @@ export default {
         modelOptions: [],
         recalls: [],
         loadingModels: '',
-        noRecallResults: 'false'
+        noRecallResults: 'false',
+        getMakesError: 'false',
+        getYearsError: 'false',
+        getModelsError: 'false',
+        getRecallsError: 'false'
       }
   },
   
   methods: {
         getMakeOptions() {
-          axios.get("https://localhost:44390/api/carrecall/makes").then(response => {
-            this.makeOptions = response.data
+          axios.get("https://localhost:44390/api/carrecall/makes")
+          .then(
+            response => {
+              this.makeOptions = response.data
+          })
+          .catch(
+              error => {
+                console.log(error);
+                this.getMakesError = 'true';
           });
         },
 
         getYearOptions() {
-            axios.get("https://localhost:44390/api/carrecall/years").then(
-            response => {
-              //reset the "no model results" message
-              this.noModelResults = 'false';
-              this.isMakeSelected = 'true';
-              this.yearOptions = response.data
-            },
-            error => {
-              alert("Error getting year results");
-            });
+            axios.get("https://localhost:44390/api/carrecall/years")
+            .then(
+              response => {
+                //reset the "no model results" message
+                this.noModelResults = 'false';
+                this.isMakeSelected = 'true';
+                this.yearOptions = response.data
+              })
+            .catch(
+              error => {
+                console.log(error);
+                this.getYearsError = 'true';
+              });
         },
 
         getModelOptions() {
             this.loadingModels = 'true';
             this.isYearSelected = 'true';
-            axios.get("https://localhost:44390/api/carrecall/" + this.selectedMake + "/" + this.selectedYear).then(
+            axios.get("https://localhost:44390/api/carrecall/" + this.selectedMake + "/" + this.selectedYear)
+            .then(
               response => {
                 this.modelOptions = response.data;
                 this.loadingModels = '';
@@ -135,20 +166,31 @@ export default {
                 if(response.data.length == 0){
                   this.noModelResults = 'true';
                 }
-              },
+              })
+            .catch(
               error => {
-                alert("Error getting models");
+                console.log(error);
+                //if error, turn off loading message and show error message
+                this.loadingModels = 'false';
+                this.getModelsError = 'true';
               });
         },
 
         getRecalls() {
-            axios.get("https://localhost:44390/api/carrecall/" + this.selectedMake + "/" + this.selectedYear + "/" + this.selectedModel).then(response => {
-              this.imageUrl = response.data.imageUrl;
-              this.recalls = response.data.recallList;
-              this.areRecallsReturned = 'true';
-              if(response.data.recallList.length == 0){
-                this.noRecallResults = 'true';
-              }
+            axios.get("https://localhost:44390/api/carrecall/" + this.selectedMake + "/" + this.selectedYear + "/" + this.selectedModel)
+            .then(
+              response => {
+                this.imageUrl = response.data.imageUrl;
+                this.recalls = response.data.recallList;
+                this.areRecallsReturned = 'true';
+                if(response.data.recallList.length == 0){
+                  this.noRecallResults = 'true';
+                }
+            })
+            .catch(
+              error => {
+                console.log(error);
+                this.getRecallsError = 'true';
             });
         },
         setCarForRequest(){
@@ -157,25 +199,36 @@ export default {
         },
         showSearch(){
           //reset to show search form again
-          this.selectedMake = '',
-          this.selectedYear = '',
-          this.selectedModel = '',
-          this.imageUrl =  '',
-          this.areRecallsReturned =  'false',
-          this.makeOptions =  [],
-          this.yearOptions =  [],
-          this.modelOptions =  [],
-          this.recalls =  [],
-          this.loadingModels =  '',
-          this.isModelSelected = 'false',
-          this.isYearSelected= 'false',
+          this.selectedMake = '';
+          this.selectedYear = '';
+          this.selectedModel = '';
+          this.imageUrl =  '';
+          this.areRecallsReturned =  'false';
+          this.makeOptions =  [];
+          this.yearOptions =  [];
+          this.modelOptions =  [];
+          this.recalls =  [];
+          this.loadingModels =  '';
+          this.isModelSelected = 'false';
+          this.isYearSelected= 'false';
           this.isMakeSelected= 'false';
           this.noModelResults = 'false';
           this.noRecallResults = 'false';
+          this.getMakesError = 'false';
+          this.getYearsError = 'false';
+          this.getModelsError = 'false';
+          this.getRecallsError = 'false';
 
           //load makes into dropdown
-          axios.get("https://localhost:44390/api/carrecall/makes").then(response => {
+          axios.get("https://localhost:44390/api/carrecall/makes")
+          .then(
+            response => {
             this.makeOptions = response.data
+          })
+          .catch(
+              error => {
+                console.log(error);
+                this.getMakesError = 'true';
           });
         }
       },
@@ -188,5 +241,5 @@ export default {
 </script>
 
 <style>
-
+  
 </style>
