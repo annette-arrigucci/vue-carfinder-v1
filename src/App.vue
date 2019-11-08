@@ -41,7 +41,7 @@
         </div>
 
         <div>
-            <label>Choose a model:</label>
+            <label>Choose a model:</label><br>
             <div v-if="loadingModels === 'true'" style="color: red;">Loading the models...please wait</div>
             <div v-if="noModelResults === 'true'" style="color: red;">No models found for make and year. Please select again.</div>
             <select v-model="selectedModel" v-on:change="setCarForRequest()" v-bind:disabled="isYearSelected !== 'true'" style="min-width: 125px;">
@@ -72,7 +72,7 @@
           <div v-if="noRecallResults !== 'true'">
             <div class="text-center">
               <h2>Recalls for {{ selectedYear }} {{ selectedMake }} {{ selectedModel }}</h2>
-              <img v-bind:src="imageUrl" v-bind:alt="selectedModel" width="600" height="400" style="margin-bottom: 20px;" />
+              <img v-bind:src="imageUrl" v-bind:alt="selectedModel" width="80%" style="margin-bottom: 20px;" />
             </div>
                 <div id="recall-list">
                     <div v-for="recall in recalls" v-bind:key="recall.reportReceivedDate">
