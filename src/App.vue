@@ -54,7 +54,7 @@
         </div>
 
         <div>
-          <button v-on:click="getRecalls()" v-bind:disabled="isModelSelected !== 'true'">Get Recalls</button>
+          <button v-on:click="getRecalls()" v-bind:disabled="isModelSelected !== 'true'" style="margin-top: 20px;">Get Recalls</button>
         </div>
         <div v-if="getRecallsError === 'true'" style="color: red;">Error getting recalls</div>
     </div>
@@ -72,7 +72,7 @@
           <div v-if="noRecallResults !== 'true'">
             <div class="text-center">
               <h2>Recalls for {{ selectedYear }} {{ selectedMake }} {{ selectedModel }}</h2>
-              <img v-bind:src="imageUrl" v-bind:alt="selectedModel" width="600" height="400" />
+              <img v-bind:src="imageUrl" v-bind:alt="selectedModel" width="600" height="400" style="margin-bottom: 20px;" />
             </div>
                 <div id="recall-list">
                     <div v-for="recall in recalls" v-bind:key="recall.reportReceivedDate">
@@ -126,20 +126,20 @@ export default {
   
   methods: {
         getMakeOptions() {
-          axios.get("https://localhost:44390/api/carrecall/makes")
+          axios.get("https://arrigucci-carfinder.azurewebsites.net/api/carrecall/makes")
           .then(
             response => {
               this.makeOptions = response.data
           })
           .catch(
               error => {
-                console.log(error);
+                //console.log(error);
                 this.getMakesError = 'true';
           });
         },
 
         getYearOptions() {
-            axios.get("https://localhost:44390/api/carrecall/years")
+            axios.get("https://arrigucci-carfinder.azurewebsites.net/api/carrecall/years")
             .then(
               response => {
                 //reset the "no model results" message
@@ -149,7 +149,7 @@ export default {
               })
             .catch(
               error => {
-                console.log(error);
+                //console.log(error);
                 this.getYearsError = 'true';
               });
         },
@@ -157,7 +157,7 @@ export default {
         getModelOptions() {
             this.loadingModels = 'true';
             this.isYearSelected = 'true';
-            axios.get("https://localhost:44390/api/carrecall/" + this.selectedMake + "/" + this.selectedYear)
+            axios.get("https://arrigucci-carfinder.azurewebsites.net/api/carrecall/" + this.selectedMake + "/" + this.selectedYear)
             .then(
               response => {
                 this.modelOptions = response.data;
@@ -169,7 +169,7 @@ export default {
               })
             .catch(
               error => {
-                console.log(error);
+                //console.log(error);
                 //if error, turn off loading message and show error message
                 this.loadingModels = 'false';
                 this.getModelsError = 'true';
@@ -177,7 +177,7 @@ export default {
         },
 
         getRecalls() {
-            axios.get("https://localhost:44390/api/carrecall/" + this.selectedMake + "/" + this.selectedYear + "/" + this.selectedModel)
+            axios.get("https://arrigucci-carfinder.azurewebsites.net/api/carrecall/" + this.selectedMake + "/" + this.selectedYear + "/" + this.selectedModel)
             .then(
               response => {
                 this.imageUrl = response.data.imageUrl;
@@ -189,7 +189,7 @@ export default {
             })
             .catch(
               error => {
-                console.log(error);
+                //console.log(error);
                 this.getRecallsError = 'true';
             });
         },
@@ -220,20 +220,20 @@ export default {
           this.getRecallsError = 'false';
 
           //load makes into dropdown
-          axios.get("https://localhost:44390/api/carrecall/makes")
+          axios.get("https://arrigucci-carfinder.azurewebsites.net/api/carrecall/makes")
           .then(
             response => {
             this.makeOptions = response.data
           })
           .catch(
               error => {
-                console.log(error);
+                //console.log(error);
                 this.getMakesError = 'true';
           });
         }
       },
       mounted() {
-        axios.get("https://localhost:44390/api/carrecall/makes").then(response => {
+        axios.get("https://arrigucci-carfinder.azurewebsites.net/api/carrecall/makes").then(response => {
             this.makeOptions = response.data
           });
       }
